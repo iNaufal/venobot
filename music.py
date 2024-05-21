@@ -29,7 +29,6 @@ def run_bot():
     # Daftar perintah FFmpeg
     ffmpeg_command = [
         *ffmpeg_options['before_options'].split(),  # Menambahkan opsi "before_options" ke daftar perintah
-        '-i', 'song.mp3',  # Path ke file input (diganti dengan nama lagu Anda)
         '-c:v', 'copy',
         '-c:a', 'copy',
         '-f', 'mpegts',
@@ -130,7 +129,6 @@ def run_bot():
 
         except Exception as e:
             logging.error(f"An error occurred: {e}")
-            await ctx.send(f"An error occurred: {e}")
 
     async def send_queue_info(ctx, title, link, duration):
         if ctx.guild.id in queues:
