@@ -5,10 +5,12 @@ import asyncio
 #library for discord youtube
 import yt_dlp
 
+from dotenv import load_dotenv
 import urllib.parse, urllib.request, re
 from datetime import timedelta
 
 def run_bot():
+    load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     intents = discord.Intents.default()
     intents.message_content = True
