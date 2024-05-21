@@ -6,7 +6,7 @@ import asyncio
 import yt_dlp
 
 from dotenv import load_dotenv
-import urllib.parse, urllib.request, re
+import urllib.request
 from datetime import timedelta
 
 def run_bot():
