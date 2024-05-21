@@ -6,8 +6,10 @@ import asyncio
 import yt_dlp
 
 from dotenv import load_dotenv
-import urllib.request
 from datetime import timedelta
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 def run_bot():
     load_dotenv()
@@ -116,7 +118,8 @@ def run_bot():
                 repeat_flags[ctx.guild.id]['link'] = link
 
         except Exception as e:
-            print(e)
+            logging.error(f"An error occurred: {e}")
+            await ctx.send(f"An error occurred: {e}")
 
     async def send_queue_info(ctx, title, link, duration):
         if ctx.guild.id in queues:
