@@ -25,6 +25,17 @@ def run_bot():
     ytdl = yt_dlp.YoutubeDL(yt_dl_options)
 
     ffmpeg_options = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5','options': '-vn -filter:a "volume=0.25"'}
+    
+    # Daftar perintah FFmpeg
+    ffmpeg_command = [
+        *ffmpeg_options['before_options'].split(),  # Menambahkan opsi "before_options" ke daftar perintah
+        '-i', 'song.mp3',  # Path ke file input (diganti dengan nama lagu Anda)
+        '-c:v', 'copy',
+        '-c:a', 'copy',
+        '-f', 'mpegts',
+        'pipe:1',
+        *ffmpeg_options['options'].split()  # Menambahkan opsi "options" ke daftar perintah
+    ]
 
     @client.event
     async def on_ready():
@@ -101,7 +112,7 @@ def run_bot():
             await ctx.send(embed=embed)
 
             song = data['url']
-            player = discord.FFmpegOpusAudio(song, **ffmpeg_options)
+            player = discord.FFmpegOpusAudio(song, **ffmpeg_command)
 
             def after_playing(error):
                 coro = play_next(ctx)
