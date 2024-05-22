@@ -79,10 +79,9 @@ def run_bot():
             loop = asyncio.get_event_loop()
             data = await loop.run_in_executor(None, lambda: ytdl.extract_info(link, download=False))
 
-            if 'entries' in data:  # If the link is a playlist
+            if 'entries' in data and len(data['entries']) > 0:  # If the link is a playlist with entries
                 entries = data['entries']
-                first_entry = entries.pop(0)
-                await play_single(ctx, first_entry, skip)
+                await play_single(ctx, entries.pop(0), skip)
                 for entry in entries:
                     duration, title = entry.get('duration', 0), entry.get('title', 'Unknown')
                     queues[ctx.guild.id].append((entry['webpage_url'], duration, title))
@@ -91,7 +90,7 @@ def run_bot():
                 await play_single(ctx, data, skip)
 
         except Exception as e:
-            logging.error(f"An error occurred: {e}")
+            logging.error(f"An error occurred while processing the link: {e}")
 
     async def play_single(ctx, data, skip):
         try:
@@ -113,6 +112,8 @@ def run_bot():
             player = discord.FFmpegOpusAudio(song, **ffmpeg_options)
 
             def after_playing(error):
+                if error:
+                    logging.error(f'Error in after_playing: {error}')
                 coro = play_next(ctx)
                 future = asyncio.run_coroutine_threadsafe(coro, client.loop)
                 try:
@@ -138,9 +139,7 @@ def run_bot():
                 description=f"[{title}]({link})",
                 color=discord.Color.blue()
             )
-            #Footer embed
             embed.set_footer(text=f"Requested by: {requestm}")
-            #Field embed
             embed.add_field(name="Estimated time until play", value=f"{str(timedelta(seconds=estimated_time))}", inline=True)
             embed.add_field(name="Song Duration", value=f"{str(timedelta(seconds=duration))}", inline=True)
             await ctx.send(embed=embed)
@@ -154,7 +153,7 @@ def run_bot():
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(link, download=False))
         
-        if 'entries' in data:  # If the link is a search result or playlist
+        if 'entries' in data and len(data['entries']) > 0:  # Ensure there are entries
             data = data['entries'][0]
 
         return data.get('duration', 0), data.get('title', 'Unknown')
