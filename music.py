@@ -94,35 +94,39 @@ def run_bot():
             logging.error(f"An error occurred: {e}")
 
     async def play_single(ctx, data, skip):
-        link = data['webpage_url']
-        titlem = data['title']
-        duration = data.get('duration', 0)
-        requestm = ctx.author.name
+        try:
+            link = data['webpage_url']
+            titlem = data['title']
+            duration = data.get('duration', 0)
+            requestm = ctx.author.name
 
-        embed = discord.Embed(
-            title=f"🎶 Now Playing 1/{len(queues.get(ctx.guild.id, [])) + 1}",
-            description=f"[{titlem}]({link})\nRequested by: **{requestm}**\n\nEnjoy the music!",
-            color=discord.Color.blue()
-        )
-        embed.set_footer(text=f"Duration: {str(timedelta(seconds=duration))}")
-        embed.set_thumbnail(url=data['thumbnail'])
-        await ctx.send(embed=embed)
+            embed = discord.Embed(
+                title=f"🎶 Now Playing 1/{len(queues.get(ctx.guild.id, [])) + 1}",
+                description=f"[{titlem}]({link})\nRequested by: **{requestm}**\n\nEnjoy the music!",
+                color=discord.Color.blue()
+            )
+            embed.set_footer(text=f"Duration: {str(timedelta(seconds=duration))}")
+            embed.set_thumbnail(url=data['thumbnail'])
+            await ctx.send(embed=embed)
 
-        song = data['url']
-        player = discord.FFmpegOpusAudio(song, **ffmpeg_options)
+            song = data['url']
+            player = discord.FFmpegOpusAudio(song, **ffmpeg_options)
 
-        def after_playing(error):
-            coro = play_next(ctx)
-            future = asyncio.run_coroutine_threadsafe(coro, client.loop)
-            try:
-                future.result()
-            except Exception as e:
-                logging.error(f'Error in after_playing: {e}')
+            def after_playing(error):
+                coro = play_next(ctx)
+                future = asyncio.run_coroutine_threadsafe(coro, client.loop)
+                try:
+                    future.result()
+                except Exception as e:
+                    logging.error(f'Error in after_playing: {e}')
 
-        voice_clients[ctx.guild.id].play(player, after=after_playing)
+            voice_clients[ctx.guild.id].play(player, after=after_playing)
 
-        if ctx.guild.id in repeat_flags and repeat_flags[ctx.guild.id].get('repeat', False):
-            repeat_flags[ctx.guild.id]['link'] = link
+            if ctx.guild.id in repeat_flags and repeat_flags[ctx.guild.id].get('repeat', False):
+                repeat_flags[ctx.guild.id]['link'] = link
+
+        except Exception as e:
+            logging.error(f"An error occurred in play_single: {e}")
 
     async def send_queue_info(ctx, title, link, duration):
         if ctx.guild.id in queues:
@@ -134,7 +138,9 @@ def run_bot():
                 description=f"[{title}]({link})",
                 color=discord.Color.blue()
             )
+            #Footer embed
             embed.set_footer(text=f"Requested by: {requestm}")
+            #Field embed
             embed.add_field(name="Estimated time until play", value=f"{str(timedelta(seconds=estimated_time))}", inline=True)
             embed.add_field(name="Song Duration", value=f"{str(timedelta(seconds=duration))}", inline=True)
             await ctx.send(embed=embed)
@@ -148,7 +154,7 @@ def run_bot():
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(link, download=False))
         
-        if 'entries' in data:
+        if 'entries' in data:  # If the link is a search result or playlist
             data = data['entries'][0]
 
         return data.get('duration', 0), data.get('title', 'Unknown')
