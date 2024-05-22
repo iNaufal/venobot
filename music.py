@@ -134,9 +134,7 @@ def run_bot():
                 description=f"[{title}]({link})",
                 color=discord.Color.blue()
             )
-            #Footer embed
             embed.set_footer(text=f"Requested by: {requestm}")
-            #Field embed
             embed.add_field(name="Estimated time until play", value=f"{str(timedelta(seconds=estimated_time))}", inline=True)
             embed.add_field(name="Song Duration", value=f"{str(timedelta(seconds=duration))}", inline=True)
             await ctx.send(embed=embed)
@@ -150,7 +148,7 @@ def run_bot():
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(link, download=False))
         
-        if 'entries' in data:  # If the link is a search result or playlist
+        if 'entries' in data:
             data = data['entries'][0]
 
         return data.get('duration', 0), data.get('title', 'Unknown')
